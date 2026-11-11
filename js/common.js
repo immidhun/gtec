@@ -4,7 +4,7 @@
   var G = window.GTEC_APP = {};
   var NATIVE = window.GTEC || null;            // injected by the Android app
   G.native = NATIVE;
-  G.VERSION = '1.3.0';
+  G.VERSION = '2.0.0';
 
   /* ---------- storage ---------- */
   G.store = {
@@ -16,7 +16,7 @@
   G.config = function () {
     var base = window.GTEC_CONFIG || {};
     var saved = G.store.get('config', {});
-    return { apiUrl: saved.apiUrl || base.apiUrl || '', displayKey: saved.displayKey || base.displayKey || '' };
+    return { apiUrl: saved.apiUrl || base.apiUrl || '', displayKey: saved.displayKey || base.displayKey || '', mgmtUrl: saved.mgmtUrl || base.mgmtUrl || '' };
   };
   /* Demo build: everything runs on made-up data inside the app (js/demo.js). No server, nothing leaves the device. */
   G.demo = !!((window.GTEC_CONFIG || {}).demo && window.GTEC_DEMO_SERVER);
@@ -50,6 +50,15 @@
     var cfg = G.config();
     if (!cfg.apiUrl) return Promise.reject(new Error('Server link not set. Open Settings.'));
     return withTimeout(fetch(cfg.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }), 25000)
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (!j.ok) throw new Error(j.error || 'Server error'); return j; });
+  };
+
+  /* Centre Manager server (students, fees, leaves, computers...). Separate from the TV / attendance server above. */
+  G.mApi = function (body) {
+    var cfg = G.config();
+    if (!cfg.mgmtUrl) return Promise.reject(new Error('Centre Manager link not set. Ask the director to add it in Settings.'));
+    return withTimeout(fetch(cfg.mgmtUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }), 40000)
       .then(function (r) { return r.json(); })
       .then(function (j) { if (!j.ok) throw new Error(j.error || 'Server error'); return j; });
   };
@@ -102,6 +111,7 @@
   };
 
   G.toast = function (msg, ms) {
+    var old = document.querySelector('.toast'); if (old) old.remove();      // one message at a time
     var t = G.h('div', { class: 'toast', role: 'status', text: msg });
     document.body.appendChild(t);
     setTimeout(function () { t.remove(); }, ms || 2800);
@@ -142,7 +152,9 @@
       G.h('div', { class: 'modes' }, [
         G.h('button', { onclick: function () { G.setMode('display'); } }, [G.h('b', { text: 'TV display' }), G.h('span', { text: 'Morning brief, batch attendance boards, music and ads. Use on the TV box or the PC connected to the TV.' })]),
         G.h('button', { onclick: function () { G.setMode('tutor'); } }, [G.h('b', { text: 'Tutor' }), G.h('span', { text: 'Mark students present or on leave for today. Updates the TV straight away.' })]),
-        G.h('button', { onclick: function () { G.setMode('director'); } }, [G.h('b', { text: 'Director' }), G.h('span', { text: 'See today at a glance, check the TV is online, push announcements.' })])
+        G.h('button', { onclick: function () { G.setMode('director'); } }, [G.h('b', { text: 'Director' }), G.h('span', { text: 'See today at a glance, check the TV is online, push announcements.' })]),
+        G.demo ? null : G.h('button', { onclick: function () { G.setMode('office'); } }, [G.h('b', { text: 'Centre Manager' }), G.h('span', { text: 'Students, fees and reminders, leaves, batches, lab computers, upgrade courses and enquiries. For the director, front office and tutors.' })]),
+        G.demo ? null : G.h('button', { onclick: function () { G.setMode('student'); } }, [G.h('b', { text: 'Student' }), G.h('span', { text: 'See your attendance and fees, apply for leave and find your next course.' })])
       ]),
       G.h('div', { class: 'btns' }, [G.h('button', { class: 'btn', text: G.demo ? 'Demo settings' : 'Server settings', onclick: G.openSettings })])
     ]));
@@ -155,24 +167,27 @@
     var cfg = G.config();
     var url = G.h('input', { id: 'set-url', type: 'url', value: cfg.apiUrl, placeholder: 'https://script.google.com/macros/s/…/exec' });
     var key = G.h('input', { id: 'set-key', type: 'text', value: cfg.displayKey, placeholder: 'DISPLAY_KEY from the SETTINGS tab' });
-    var mode = G.h('select', { id: 'set-mode' }, ['display', 'tutor', 'director'].map(function (m) {
-      return G.h('option', { value: m, selected: G.getMode() === m ? 'selected' : null, text: { display: 'TV display', tutor: 'Tutor', director: 'Director' }[m] });
+    var mode = G.h('select', { id: 'set-mode' }, ['display', 'tutor', 'director', 'office', 'student'].map(function (m) {
+      return G.h('option', { value: m, selected: G.getMode() === m ? 'selected' : null, text: { display: 'TV display', tutor: 'Tutor', director: 'Director', office: 'Centre Manager', student: 'Student' }[m] });
     }));
+    var mgmt = G.h('input', { id: 'set-mgmt', type: 'url', value: cfg.mgmtUrl, placeholder: 'https://script.google.com/macros/s/…/exec' });
+    function keep() { G.store.set('config', { apiUrl: url.value.trim(), displayKey: key.value.trim(), mgmtUrl: mgmt.value.trim() }); }
     var status = G.h('p', { class: 'hint', text: 'App version ' + G.VERSION });
     var ov = G.h('div', { class: 'overlay', role: 'dialog', 'aria-label': 'Settings' }, [
       G.h('div', { class: 'card' }, [
         G.h('h2', { text: 'Settings' }),
         G.h('label', { class: 'field' }, ['Server link (Apps Script web app URL)', url]),
         G.h('label', { class: 'field' }, ['Display key', key]),
+        G.h('label', { class: 'field' }, ['Centre Manager link (second Apps Script web app)', mgmt]),
         G.h('label', { class: 'field' }, ['This device is a', mode]),
         status,
         G.h('div', { class: 'btns' }, [
           G.h('button', { class: 'btn primary', text: 'Save', onclick: function () {
-            G.store.set('config', { apiUrl: url.value.trim(), displayKey: key.value.trim() });
+            keep();
             G.setMode(mode.value);
           } }),
           G.h('button', { class: 'btn', text: 'Test connection', onclick: function () {
-            G.store.set('config', { apiUrl: url.value.trim(), displayKey: key.value.trim() });
+            keep();
             status.textContent = 'Testing…';
             G.apiGet({ action: 'display', key: key.value.trim() }).then(function (d) {
               status.textContent = 'Connected. ' + d.batches.length + ' batches, ' + d.batches.reduce(function (a, b) { return a + b.counts.total; }, 0) + ' students today.';
@@ -267,6 +282,8 @@
     }
     if (mode === 'tutor' && window.GTEC_TUTOR) return window.GTEC_TUTOR.start();
     if (mode === 'director' && window.GTEC_DIRECTOR) return window.GTEC_DIRECTOR.start();
+    if (mode === 'office' && window.GTEC_MANAGE && !G.demo) return window.GTEC_MANAGE.start();
+    if (mode === 'student' && window.GTEC_STUDENT && !G.demo) return window.GTEC_STUDENT.start();
     G.chooseMode();
   };
   document.addEventListener('DOMContentLoaded', function () { if (!window.GTEC_NO_AUTOSTART) G.start(); });
