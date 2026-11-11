@@ -1,7 +1,7 @@
 {
   "name": "G-TEC Charummood",
   "short_name": "G-TEC",
-  "description": "Batch attendance, tutor marking and director view for G-TEC Charummood.",
+  "description": "Attendance, fees, leaves, batches and lab computers for G-TEC Charummood.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

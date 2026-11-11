@@ -53,7 +53,8 @@
     root().appendChild(h('div', { class: 'phone-wrap' }, [
       h('div', { class: 'phone-head' }, [
         h('div', null, [h('h1', { text: 'Today' }), h('div', { class: 'sub', text: d.today.weekday + ' ' + d.today.date + (d.today.holiday ? ' · Holiday: ' + d.today.holiday : d.today.isClassDay ? '' : ' · no classes') })]),
-        h('div', { class: 'btns' }, [h('button', { class: 'btn', text: 'Refresh', onclick: function () { load(); } }), h('button', { class: 'btn', text: 'Settings', onclick: G.openSettings })])
+        h('div', { class: 'btns' }, [h('button', { class: 'btn', text: 'Refresh', onclick: function () { load(); } }), h('button', { class: 'btn', text: 'Settings', onclick: G.openSettings }),
+          G.demo ? null : h('button', { class: 'btn primary', text: 'Centre Manager', title: 'Students, fees, leaves, computers', onclick: function () { G.setMode('office'); } })])
       ]),
       h('div', { class: 'card' }, [
         h('dl', { class: 'kv' }, [
