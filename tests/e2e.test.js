@@ -50,6 +50,9 @@ const shots = path.join(__dirname, 'shots');
     /* ---- director ---- */
     step = 'sign in';
     const page = await open('office');
+    await page.locator('#m-name').pressSequentially('Director');          // typing the letter R must not open Settings
+    assert.strictEqual(await page.locator('.overlay').count(), 0, 'Settings opened while typing a name');
+    assert.strictEqual(await page.inputValue('#m-name'), 'Director');
     await signIn(page, 'Director', '000000');
     await page.getByText('Wrong name or PIN').waitFor();
     await signIn(page, 'Director', pin);

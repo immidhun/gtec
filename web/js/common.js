@@ -4,7 +4,7 @@
   var G = window.GTEC_APP = {};
   var NATIVE = window.GTEC || null;            // injected by the Android app
   G.native = NATIVE;
-  G.VERSION = '2.0.0';
+  G.VERSION = '2.0.1';
 
   /* ---------- storage ---------- */
   G.store = {
@@ -235,8 +235,11 @@
 
   var okTimes = [], taps = [];
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'ContextMenu' || e.keyCode === 82 || e.key === 'F1') { e.preventDefault(); G.openSettings(); return; }
-    if ((e.key === 'Enter' || e.keyCode === 23) && !document.querySelector('.overlay')) {
+    // Key code 82 is the Menu key on a TV remote, but also the letter R on a keyboard: never react while someone is typing.
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || '');
+    var menuKey = e.key === 'ContextMenu' || e.key === 'F1' || (e.keyCode === 82 && !typing && !/^r$/i.test(e.key || ''));
+    if (menuKey) { e.preventDefault(); G.openSettings(); return; }
+    if ((e.key === 'Enter' || e.keyCode === 23) && !typing && !document.querySelector('.overlay')) {
       var t = Date.now(); okTimes = okTimes.filter(function (x) { return t - x < 3000; }); okTimes.push(t);
       if (okTimes.length >= 5) { okTimes = []; G.openSettings(); }
     }
@@ -266,7 +269,7 @@
     // Double-click (or F) for full screen on a Windows PC connected to the TV.
     function full() { try { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); } catch (e) { /* not allowed */ } }
     document.addEventListener('dblclick', full);
-    document.addEventListener('keydown', function (e) { if ((e.key === 'f' || e.key === 'F') && !document.querySelector('.overlay')) full(); });
+    document.addEventListener('keydown', function (e) { if ((e.key === 'f' || e.key === 'F') && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && !document.querySelector('.overlay')) full(); });
     setTimeout(function () { G.toast('Double-click or press F for full screen. Click once to turn on sound.', 7000); }, 2500);
   }
 
