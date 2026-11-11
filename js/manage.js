@@ -21,6 +21,7 @@
   function dt(ymd) { var p = String(ymd || '').split('-'); return p.length === 3 ? Number(p[2]) + ' ' + G.MONTHS[Number(p[1]) - 1].slice(0, 3) + (p[0] !== st.boot.today.slice(0, 4) ? ' ' + p[0] : '') : (ymd || ''); }
   function set(k) { return (st.boot.settings || {})[k] || ''; }
   function fill(tpl, o) { return String(tpl || '').replace(/\{(\w+)\}/g, function (m, k) { return o[k] === undefined || o[k] === null ? '' : String(o[k]); }); }
+  function people(n) { return n + (n === 1 ? ' student' : ' students'); }
   function pill(text, kind) { return h('span', { class: 'pill ' + (kind || 'info'), text: text }); }
   function btn(text, fn, cls) { return h('button', { class: 'btn ' + (cls || ''), type: 'button', text: text, onclick: fn }); }
   function fail(e) { G.toast(e.message || String(e), 4500); }
@@ -202,8 +203,8 @@
         h('div', { class: 'tiles2' }, [
           tile('Collected today', rs(d.collectedToday), modes || 'No payments yet', 'fees'),
           tile('This month', rs(d.collectedMonth), d.target ? pct + '% of ' + rs(d.target) + ' target' : 'Set MONTHLY_TARGET in More › Settings', 'fees'),
-          tile('Overdue fees', rs(d.overdue), d.overdueCount + ' students', 'fees', d.overdue ? 'bad' : ''),
-          tile('Due in 7 days', rs(d.dueThisWeek), d.dueThisWeekCount + ' students · total pending ' + rs(d.outstanding), 'fees'),
+          tile('Overdue fees', rs(d.overdue), people(d.overdueCount), 'fees', d.overdue ? 'bad' : ''),
+          tile('Due in 7 days', rs(d.dueThisWeek), people(d.dueThisWeekCount) + ' · total pending ' + rs(d.outstanding), 'fees'),
           tile('Active students', String(d.activeStudents), d.newThisMonth + ' joined this month', 'students'),
           tile('Attendance alerts', String(d.attendanceAlerts), d.attendanceError ? 'Attendance file not readable' : 'absent in a row or low %', 'attendance', d.attendanceAlerts ? 'warn' : ''),
           tile('Leave requests', String(d.leavesPending), d.onLeaveToday.length ? 'On leave today: ' + d.onLeaveToday.join(', ') : 'waiting for a decision', 'leaves', d.leavesPending ? 'warn' : ''),
