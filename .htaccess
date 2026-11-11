@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+DirectoryIndex index.html
+AddType application/manifest+json .webmanifest
+<FilesMatch "\.(html|js|css|webmanifest)$">
+  Header set Cache-Control "no-cache"
+</FilesMatch>
+Header set X-Robots-Tag "noindex, nofollow"

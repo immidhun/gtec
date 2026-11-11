@@ -1,0 +1,28 @@
+{
+  "name": "G-TEC Charummood",
+  "short_name": "G-TEC",
+  "description": "Batch attendance, tutor marking and director view for G-TEC Charummood.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#004282",
+  "theme_color": "#004282",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
